@@ -40,35 +40,72 @@ class Grid():
           - 将 x, y 强制转换为 int ，检查是否超出了宽高范围，如果任何一个超出则将其限制在最大宽高范围即可
           - 处理后存入 self._current_pos
         """
-        pass  # TODO: Question 1
+        # 检查输入类型和长度
+        if not isinstance(value, tuple) or len(value) != 2:
+            raise TypeError("current_pos must be a tuple of length 2")
+        
+        # 强制转换为int
+        try:
+            x = int(value[0])
+            y = int(value[1])
+        except (ValueError, TypeError):
+            raise TypeError("tuple elements must be convertible to int")
+        
+        # 限制在网格范围内
+        x = max(0, min(x, self.width - 1))
+        y = max(0, min(y, self.height - 1))
+        
+        self._current_pos = (x, y)
 
-    def move_forward(self) -> Tuple[int, int]:  # type: ignore
+    def move_forward(self) -> Tuple[int, int]:
         '''
         让机器人向当前方向走一格
         返回新的坐标 (x,y) 同时更新成员变量
         利用好上面的 setter
         以右为X轴正方向，上为Y轴正方向
         '''
-        pass  # TODO: Question 2
+        x, y = self.current_pos
+        
+        # 根据当前方向计算新坐标
+        if self.current_direction == Facing.RIGHT:
+            new_pos = (x + 1, y)
+        elif self.current_direction == Facing.UP:
+            new_pos = (x, y + 1)
+        elif self.current_direction == Facing.LEFT:
+            new_pos = (x - 1, y)
+        elif self.current_direction == Facing.DOWN:
+            new_pos = (x, y - 1)
+        else:
+            new_pos = (x, y)  # 不应发生
+        
+        # 使用setter更新位置（自动处理边界）
+        self.current_pos = new_pos
+        return self.current_pos
 
-    def turn_left(self) -> Facing:  # type: ignore
+    def turn_left(self) -> Facing:
         '''
         让机器人逆时针转向
         返回一个新方向 (Facing.UP/DOWN/LEFT/RIGHT)
         '''
-        pass  # TODO: Question 3a
+        # 逆时针转向：RIGHT→UP→LEFT→DOWN→RIGHT
+        new_value = (self.current_direction.value + 1) % 4
+        self.current_direction = Facing(new_value)
+        return self.current_direction
 
-    def turn_right(self) -> Facing:  # type: ignore
+    def turn_right(self) -> Facing:
         '''
         让机器人顺时针转向
         '''
-        pass  # TODO: Question 3b
+        # 顺时针转向：RIGHT→DOWN→LEFT→UP→RIGHT
+        new_value = (self.current_direction.value - 1) % 4
+        self.current_direction = Facing(new_value)
+        return self.current_direction
 
-    def find_enemy(self) -> bool:  # type: ignore
+    def find_enemy(self) -> bool:
         '''
         如果找到敌人（机器人和敌人坐标一致），就返回true
         '''
-        pass  # TODO: Question 4
+        return self.current_pos == self.enemy_pos
 
     def record_position(self, step: int) -> None:
         '''
@@ -76,14 +113,14 @@ class Grid():
         键(key)为步数 step，值(value)为当前坐标 self.current_pos
         例如：step=1 时，记录 {1: (0, 0)}
         '''
-        pass  # TODO: Question 5a
+        self.position_history[step] = self.current_pos
 
-    def get_position_at_step(self, step: int) -> tuple:  # type: ignore
+    def get_position_at_step(self, step: int) -> tuple:
         '''
         从 position_history 字典中获取指定步数的坐标
         如果该步数不存在，返回 None
         '''
-        pass  # TODO: Question 5b
+        return self.position_history.get(step)
 
 
 """
@@ -108,4 +145,22 @@ class Grid():
     返回：曼哈顿距离值
 
 """
-# TODO: Question 6
+class AdvancedGrid(Grid):
+    def __init__(self, width: int, height: int, enemy_pos: tuple):
+        super().__init__(width, height, enemy_pos)
+        self.steps = 0  # 初始化移动步数为0
+
+    def move_forward(self) -> Tuple[int, int]:
+        # 调用父类方法完成移动
+        super().move_forward()
+        # 移动步数加1
+        self.steps += 1
+        # 返回新坐标
+        return self.current_pos
+
+    def distance_to_enemy(self) -> int:
+        # 获取当前位置和敌人位置
+        x1, y1 = self.current_pos
+        x2, y2 = self.enemy_pos
+        # 计算曼哈顿距离
+        return abs(x1 - x2) + abs(y1 - y2)
